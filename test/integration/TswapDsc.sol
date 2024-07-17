@@ -55,19 +55,6 @@ contract TswapDsc is Test {
         // ERC20Mock(wbtc).mint(USER, STARTING_USER_BALANCE);
     }
 
-    modifier depositedCollateralAndMintedDsc() {
-        vm.startPrank(USER);
-        // approve dsce contract to use amountCollateral amount of weth
-        wethMock.approve(address(dsce), amountCollateral);
-        dsce.depositCollateralAndMintDsc(
-            address(wethMock),
-            amountCollateral,
-            amountToMint
-        );
-        vm.stopPrank();
-        _;
-    }
-
     modifier MintDscAndDepositIntoTswap() {
         vm.startPrank(USER);
         //depositedCollateralAndMintedDsc
@@ -83,7 +70,7 @@ contract TswapDsc is Test {
         dsc.approve(address(pool), 10e18);
 
         pool.deposit(
-            1e18, // WETH
+            1e18, // WETH`
             1e18, // Min TSWAP-Token
             10e18, // Max Link
             uint64(block.timestamp)
@@ -93,22 +80,37 @@ contract TswapDsc is Test {
         _;
     }
 
-    function testDepositDscIntoTswap()
-        external
-        depositedCollateralAndMintedDsc
-    {
-        vm.startPrank(USER);
+    function testDepositDscIntoTswap() external MintDscAndDepositIntoTswap {
+        // console.log("USER dsc balance", dsc.balanceOf(USER) / 1e18);
+        // console.log("USER pool balance", pool.balanceOf(USER) / 1e18);
 
-        wethMock.approve(address(pool), 10e18);
-        dsc.approve(address(pool), 10e18);
-
-        pool.deposit(
-            1e18, // WETH
-            1e18, // Min TSWAP-Token
-            10e18, // Max Link
-            uint64(block.timestamp)
+        // log pool balance of ETH
+        console.log(
+            "Before pool balance of ETH",
+            wethMock.balanceOf(address(pool))
         );
+        // log pool balance of TSWAP
+        console.log("Before pool balance of dsc", dsc.balanceOf(address(pool)));
 
+        //   USER dsc balance 90
+        //   USER pool balance 1
+        //   pool balance of ETH 1
+        //   pool balance of dsc 10
+        vm.startPrank(USER);
+        dsc.approve(address(pool), 1e18);
+        pool.swapExactInput(dsc, 1e18, wethMock, 1e16, uint64(block.timestamp));
         vm.stopPrank();
+
+        // log pool balance of ETH
+        console.log(
+            "After pool balance of ETH",
+            wethMock.balanceOf(address(pool))
+        );
+        // log pool balance of TSWAP
+        console.log("After pool balance of dsc", dsc.balanceOf(address(pool)));
     }
+
+    // @todo
+    // determines why ETH isnt round as is 909090909090909091
+    // play around with view func that calc price
 }

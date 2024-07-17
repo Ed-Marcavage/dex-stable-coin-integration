@@ -247,6 +247,10 @@ contract TSwapPool is ERC20 {
     //////////////////////////////////////////////////////////////*/
 
     // solves for Δy (outputAmount) ??
+    // _sell
+    // since we are selling
+    //k′ = (x+Δx) × (y−Δy)
+    // selling - need to solve for -Δy bc we are effective increasing the supply (+Δx)
     function getOutputAmountBasedOnInput(
         uint256 inputAmount,
         uint256 inputReserves,
